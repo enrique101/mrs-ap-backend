@@ -1,5 +1,5 @@
-# source: https://us1.prisma.sh/enriqueacuna-53257e/sick-fits/dev
-# timestamp: Mon Oct 29 2018 13:46:07 GMT-0600 (Central Standard Time)
+# source: https://mrs-ap-production.herokuapp.com/mrs-ap-prisma/prod
+# timestamp: Tue Oct 30 2018 17:38:06 GMT-0600 (Central Standard Time)
 
 type AggregateCartItem {
   count: Int!
@@ -29,8 +29,8 @@ type BatchPayload {
 type CartItem implements Node {
   id: ID!
   quantity: Int!
-  item: Item
-  user: User!
+  item(where: ItemWhereInput): Item
+  user(where: UserWhereInput): User!
 }
 
 """A connection to a list of items."""
@@ -126,11 +126,7 @@ input CartItemSubscriptionWhereInput {
 input CartItemUpdateInput {
   quantity: Int
   item: ItemUpdateOneInput
-  user: UserUpdateOneRequiredWithoutCartInput
-}
-
-input CartItemUpdateManyMutationInput {
-  quantity: Int
+  user: UserUpdateOneWithoutCartInput
 }
 
 input CartItemUpdateManyWithoutUserInput {
@@ -246,7 +242,7 @@ type Item implements Node {
   image: String!
   largeImage: String!
   price: Int!
-  user: User!
+  user(where: UserWhereInput): User!
 }
 
 """A connection to a list of items."""
@@ -355,7 +351,7 @@ input ItemUpdateDataInput {
   image: String
   largeImage: String
   price: Int
-  user: UserUpdateOneRequiredInput
+  user: UserUpdateOneInput
 }
 
 input ItemUpdateInput {
@@ -364,15 +360,7 @@ input ItemUpdateInput {
   image: String
   largeImage: String
   price: Int
-  user: UserUpdateOneRequiredInput
-}
-
-input ItemUpdateManyMutationInput {
-  title: String
-  description: String
-  image: String
-  largeImage: String
-  price: Int
+  user: UserUpdateOneInput
 }
 
 input ItemUpdateOneInput {
@@ -621,6 +609,9 @@ input ItemWhereInput {
   """All values greater than or equal the given value."""
   price_gte: Int
   user: UserWhereInput
+  _MagicalBackRelation_CartItemToItem_every: CartItemWhereInput
+  _MagicalBackRelation_CartItemToItem_some: CartItemWhereInput
+  _MagicalBackRelation_CartItemToItem_none: CartItemWhereInput
 }
 
 input ItemWhereUniqueInput {
@@ -654,11 +645,11 @@ type Mutation {
   upsertItem(where: ItemWhereUniqueInput!, create: ItemCreateInput!, update: ItemUpdateInput!): Item!
   upsertOrderItem(where: OrderItemWhereUniqueInput!, create: OrderItemCreateInput!, update: OrderItemUpdateInput!): OrderItem!
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
-  updateManyCartItems(data: CartItemUpdateManyMutationInput!, where: CartItemWhereInput): BatchPayload!
-  updateManyOrders(data: OrderUpdateManyMutationInput!, where: OrderWhereInput): BatchPayload!
-  updateManyItems(data: ItemUpdateManyMutationInput!, where: ItemWhereInput): BatchPayload!
-  updateManyOrderItems(data: OrderItemUpdateManyMutationInput!, where: OrderItemWhereInput): BatchPayload!
-  updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
+  updateManyCartItems(data: CartItemUpdateInput!, where: CartItemWhereInput): BatchPayload!
+  updateManyOrders(data: OrderUpdateInput!, where: OrderWhereInput): BatchPayload!
+  updateManyItems(data: ItemUpdateInput!, where: ItemWhereInput): BatchPayload!
+  updateManyOrderItems(data: OrderItemUpdateInput!, where: OrderItemWhereInput): BatchPayload!
+  updateManyUsers(data: UserUpdateInput!, where: UserWhereInput): BatchPayload!
   deleteManyCartItems(where: CartItemWhereInput): BatchPayload!
   deleteManyOrders(where: OrderWhereInput): BatchPayload!
   deleteManyItems(where: ItemWhereInput): BatchPayload!
@@ -682,7 +673,7 @@ type Order implements Node {
   id: ID!
   items(where: OrderItemWhereInput, orderBy: OrderItemOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OrderItem!]
   total: Int!
-  user: User!
+  user(where: UserWhereInput): User!
   clientName: String!
   clientAccount: String!
   receiptId: String!
@@ -726,7 +717,7 @@ type OrderItem implements Node {
   largeImage: String!
   price: Int!
   quantity: Int!
-  user: User
+  user(where: UserWhereInput): User
 }
 
 """A connection to a list of items."""
@@ -860,15 +851,6 @@ input OrderItemUpdateManyInput {
   delete: [OrderItemWhereUniqueInput!]
   update: [OrderItemUpdateWithWhereUniqueNestedInput!]
   upsert: [OrderItemUpsertWithWhereUniqueNestedInput!]
-}
-
-input OrderItemUpdateManyMutationInput {
-  title: String
-  description: String
-  image: String
-  largeImage: String
-  price: Int
-  quantity: Int
 }
 
 input OrderItemUpdateWithWhereUniqueNestedInput {
@@ -1136,6 +1118,9 @@ input OrderItemWhereInput {
   """All values greater than or equal the given value."""
   quantity_gte: Int
   user: UserWhereInput
+  _MagicalBackRelation_OrderToOrderItem_every: OrderWhereInput
+  _MagicalBackRelation_OrderToOrderItem_some: OrderWhereInput
+  _MagicalBackRelation_OrderToOrderItem_none: OrderWhereInput
 }
 
 input OrderItemWhereUniqueInput {
@@ -1214,14 +1199,7 @@ input OrderUpdateInput {
   clientAccount: String
   receiptId: String
   items: OrderItemUpdateManyInput
-  user: UserUpdateOneRequiredInput
-}
-
-input OrderUpdateManyMutationInput {
-  total: Int
-  clientName: String
-  clientAccount: String
-  receiptId: String
+  user: UserUpdateOneInput
 }
 
 input OrderWhereInput {
@@ -1676,34 +1654,18 @@ input UserUpdateInput {
   cart: CartItemUpdateManyWithoutUserInput
 }
 
-input UserUpdateManyMutationInput {
-  name: String
-  email: String
-  password: String
-  resetToken: String
-  resetTokenExpiry: Float
-  permissions: UserUpdatepermissionsInput
-}
-
 input UserUpdateOneInput {
   create: UserCreateInput
   connect: UserWhereUniqueInput
-  disconnect: Boolean
   delete: Boolean
   update: UserUpdateDataInput
   upsert: UserUpsertNestedInput
 }
 
-input UserUpdateOneRequiredInput {
-  create: UserCreateInput
-  connect: UserWhereUniqueInput
-  update: UserUpdateDataInput
-  upsert: UserUpsertNestedInput
-}
-
-input UserUpdateOneRequiredWithoutCartInput {
+input UserUpdateOneWithoutCartInput {
   create: UserCreateWithoutCartInput
   connect: UserWhereUniqueInput
+  delete: Boolean
   update: UserUpdateWithoutCartDataInput
   upsert: UserUpsertWithoutCartInput
 }
@@ -1965,6 +1927,15 @@ input UserWhereInput {
   cart_every: CartItemWhereInput
   cart_some: CartItemWhereInput
   cart_none: CartItemWhereInput
+  _MagicalBackRelation_OrderItemToUser_every: OrderItemWhereInput
+  _MagicalBackRelation_OrderItemToUser_some: OrderItemWhereInput
+  _MagicalBackRelation_OrderItemToUser_none: OrderItemWhereInput
+  _MagicalBackRelation_ItemToUser_every: ItemWhereInput
+  _MagicalBackRelation_ItemToUser_some: ItemWhereInput
+  _MagicalBackRelation_ItemToUser_none: ItemWhereInput
+  _MagicalBackRelation_OrderToUser_every: OrderWhereInput
+  _MagicalBackRelation_OrderToUser_some: OrderWhereInput
+  _MagicalBackRelation_OrderToUser_none: OrderWhereInput
 }
 
 input UserWhereUniqueInput {
