@@ -35,13 +35,10 @@ const Mutations = {
     },
 
     async updateItem(parent, args, ctx, info){
+
         const updates = { ...args };
         delete updates.id;
-        const ownsItem =  item.user.id === ctx.request.userId;
         hasPermission(ctx.request.user,[AppPermissions.admin, AppPermissions.itemUpdate]);
-        if(!ownsItem){
-          throw new Error("You don't have permissions");
-        }
         return await ctx.db.mutation.updateItem({
             data: updates,
             where:{
