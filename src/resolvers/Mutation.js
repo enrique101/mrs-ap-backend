@@ -57,6 +57,23 @@ const Mutations = {
         }
         return ctx.db.mutation.deleteItem({ where }, info);
     },
+    async confirmUser(parent, { id }, ctx, info){
+      const user = await ctx.db.query.user({ where: { id } });
+      if(!user || user.confirmed){
+          throw new Error(`Invalid Operation`);
+      }
+      const res = await ctx.db.mutation.updateUser({
+          where: { id },
+          data: { confirmed: true }
+      });
+      const token = jwt.sign({ userId : user.id}, process.env.APP_SECRET);
+        ctx.response.cookie('token', token, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24 * 365,
+        });
+      return { message: "User confirmed"};
+    },
+
     async signup(parent, args, ctx, info){
         args.email = args.email.toLowerCase();
         const where = {email:args.email},
@@ -70,11 +87,17 @@ const Mutations = {
                 permissions: { set: [] },
             },
         }, info);
-        const token = jwt.sign({ userId : user.id}, process.env.APP_SECRET);
-        ctx.response.cookie('token', token, {
-            httpOnly: true,
-            maxAge: 1000 * 60 * 60 * 24 * 365,
+        const mailRes = await transport.sendMail({
+            from: 'enrique.acuna@gmail.com',
+            to: user.email,
+            subject: 'Confirma tu dirección de correo',
+            html: makeANiceEmail(user.name,`<a href="${process.env.FRONTEND_URL}/confirm?id=${user.id}">Presiona aquí para confirmar tu correo.</a>`),
         });
+        // const token = jwt.sign({ userId : user.id}, process.env.APP_SECRET);
+        // ctx.response.cookie('token', token, {
+        //     httpOnly: true,
+        //     maxAge: 1000 * 60 * 60 * 24 * 365,
+        // });
         return user;
     },
     async signin(parent, { email, password }, ctx, info){
@@ -112,8 +135,8 @@ const Mutations = {
         const mailRes = await transport.sendMail({
             from: 'enrique.acuna@gmail.com',
             to: user.email,
-            subject: 'Your Passrword Reset',
-            html: makeANiceEmail(`<a href="${process.env.FRONTEND_URL}/reset?resetToken=${resetToken}">Click here to reset your password </a>`),
+            subject: 'Tu solicitud de restauración de acceso.',
+            html: makeANiceEmail(user.name,`<a href="${process.env.FRONTEND_URL}/reset?resetToken=${resetToken}">Presiona aquí para restaurar tu cotraseña</a>`),
         });
         return { message: "Reset sent!"};
     },
@@ -239,11 +262,26 @@ const Mutations = {
           info
         );
       },
+
+      async updateOrderStatus(parent, args, ctx, info) {
+        const { userId } = ctx.request;
+        const { id, status } = args;
+        console.log(args);
+        if (!userId) throw new Error('You must be signed in.');
+        return ctx.db.mutation.updateOrder(
+          {
+            where: { id },
+            data: { status },
+          },
+          info
+        );
+      },
+
       async createOrderRequest(parent, args, ctx, info) {
         const { userId } = ctx.request;
-        const { name:clientName, account:clientAccount, receipt:receiptId } = args;
+        const { name:clientName, account:clientAccount } = args;
         if (!userId) throw new Error('You must be signed in to complete this order.');
-        if (!clientName || !clientAccount || !receiptId || clientName.trim().length === 0 || clientAccount.trim().length === 0 || receiptId.trim().length === 0) throw new Error('Missing Information');
+        if (!clientName || !clientAccount || clientName.trim().length === 0 || clientAccount.trim().length === 0) throw new Error('Missing Information');
         const user = await ctx.db.query.user(
           { where: { id: userId } },
           `{
@@ -254,14 +292,18 @@ const Mutations = {
           cart {
             id
             quantity
-            item { title price id description image largeImage }
+            item { title price cost id description image largeImage }
           }}`
         );
         hasPermission(user,[AppPermissions.admin,AppPermissions.user]);
 
         const amount = user.cart.reduce(
-          (tally, cartItem) => tally + cartItem.item.price * cartItem.quantity,
-          0
+          (tally, cartItem) => {
+            tally.price = tally.price + cartItem.item.price * cartItem.quantity;
+            tally.cost = tally.cost + cartItem.item.cost * cartItem.quantity;
+            return tally;
+          },
+          {price: 0 , cost: 0}
         );
 
         const orderItems = user.cart.map(cartItem => {
@@ -276,12 +318,13 @@ const Mutations = {
 
         const order = await ctx.db.mutation.createOrder({
           data: {
-            total: amount,
+            tracking: 'MRS' + new Date().getTime(),
+            total: amount.price,
+            totalCost: amount.cost,
             items: { create: orderItems },
             user: { connect: { id: userId } },
             clientName,
             clientAccount,
-            receiptId,
           },
         });
         

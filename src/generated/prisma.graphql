@@ -1,5 +1,5 @@
-# source: https://mrs-ap-production.herokuapp.com/mrs-ap-prisma/prod
-# timestamp: Tue Oct 30 2018 17:38:06 GMT-0600 (Central Standard Time)
+# source: https://eu1.prisma.sh/enrique/demo/dev
+# timestamp: Wed Oct 31 2018 14:44:15 GMT-0600 (Central Standard Time)
 
 type AggregateCartItem {
   count: Int!
@@ -29,8 +29,8 @@ type BatchPayload {
 type CartItem implements Node {
   id: ID!
   quantity: Int!
-  item(where: ItemWhereInput): Item
-  user(where: UserWhereInput): User!
+  item: Item
+  user: User!
 }
 
 """A connection to a list of items."""
@@ -126,7 +126,11 @@ input CartItemSubscriptionWhereInput {
 input CartItemUpdateInput {
   quantity: Int
   item: ItemUpdateOneInput
-  user: UserUpdateOneWithoutCartInput
+  user: UserUpdateOneRequiredWithoutCartInput
+}
+
+input CartItemUpdateManyMutationInput {
+  quantity: Int
 }
 
 input CartItemUpdateManyWithoutUserInput {
@@ -242,7 +246,8 @@ type Item implements Node {
   image: String!
   largeImage: String!
   price: Int!
-  user(where: UserWhereInput): User!
+  cost: Int!
+  user: User!
 }
 
 """A connection to a list of items."""
@@ -261,6 +266,7 @@ input ItemCreateInput {
   image: String!
   largeImage: String!
   price: Int!
+  cost: Int!
   user: UserCreateOneInput!
 }
 
@@ -291,6 +297,8 @@ enum ItemOrderByInput {
   largeImage_DESC
   price_ASC
   price_DESC
+  cost_ASC
+  cost_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
@@ -304,6 +312,7 @@ type ItemPreviousValues {
   image: String!
   largeImage: String!
   price: Int!
+  cost: Int!
 }
 
 type ItemSubscriptionPayload {
@@ -351,7 +360,8 @@ input ItemUpdateDataInput {
   image: String
   largeImage: String
   price: Int
-  user: UserUpdateOneInput
+  cost: Int
+  user: UserUpdateOneRequiredInput
 }
 
 input ItemUpdateInput {
@@ -360,7 +370,17 @@ input ItemUpdateInput {
   image: String
   largeImage: String
   price: Int
-  user: UserUpdateOneInput
+  cost: Int
+  user: UserUpdateOneRequiredInput
+}
+
+input ItemUpdateManyMutationInput {
+  title: String
+  description: String
+  image: String
+  largeImage: String
+  price: Int
+  cost: Int
 }
 
 input ItemUpdateOneInput {
@@ -608,10 +628,29 @@ input ItemWhereInput {
 
   """All values greater than or equal the given value."""
   price_gte: Int
+  cost: Int
+
+  """All values that are not equal to given value."""
+  cost_not: Int
+
+  """All values that are contained in given list."""
+  cost_in: [Int!]
+
+  """All values that are not contained in given list."""
+  cost_not_in: [Int!]
+
+  """All values less than the given value."""
+  cost_lt: Int
+
+  """All values less than or equal the given value."""
+  cost_lte: Int
+
+  """All values greater than the given value."""
+  cost_gt: Int
+
+  """All values greater than or equal the given value."""
+  cost_gte: Int
   user: UserWhereInput
-  _MagicalBackRelation_CartItemToItem_every: CartItemWhereInput
-  _MagicalBackRelation_CartItemToItem_some: CartItemWhereInput
-  _MagicalBackRelation_CartItemToItem_none: CartItemWhereInput
 }
 
 input ItemWhereUniqueInput {
@@ -645,11 +684,11 @@ type Mutation {
   upsertItem(where: ItemWhereUniqueInput!, create: ItemCreateInput!, update: ItemUpdateInput!): Item!
   upsertOrderItem(where: OrderItemWhereUniqueInput!, create: OrderItemCreateInput!, update: OrderItemUpdateInput!): OrderItem!
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
-  updateManyCartItems(data: CartItemUpdateInput!, where: CartItemWhereInput): BatchPayload!
-  updateManyOrders(data: OrderUpdateInput!, where: OrderWhereInput): BatchPayload!
-  updateManyItems(data: ItemUpdateInput!, where: ItemWhereInput): BatchPayload!
-  updateManyOrderItems(data: OrderItemUpdateInput!, where: OrderItemWhereInput): BatchPayload!
-  updateManyUsers(data: UserUpdateInput!, where: UserWhereInput): BatchPayload!
+  updateManyCartItems(data: CartItemUpdateManyMutationInput!, where: CartItemWhereInput): BatchPayload!
+  updateManyOrders(data: OrderUpdateManyMutationInput!, where: OrderWhereInput): BatchPayload!
+  updateManyItems(data: ItemUpdateManyMutationInput!, where: ItemWhereInput): BatchPayload!
+  updateManyOrderItems(data: OrderItemUpdateManyMutationInput!, where: OrderItemWhereInput): BatchPayload!
+  updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   deleteManyCartItems(where: CartItemWhereInput): BatchPayload!
   deleteManyOrders(where: OrderWhereInput): BatchPayload!
   deleteManyItems(where: ItemWhereInput): BatchPayload!
@@ -671,12 +710,14 @@ interface Node {
 
 type Order implements Node {
   id: ID!
+  tracking: String!
   items(where: OrderItemWhereInput, orderBy: OrderItemOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OrderItem!]
   total: Int!
-  user(where: UserWhereInput): User!
+  totalCost: Int!
+  user: User!
+  status: String!
   clientName: String!
   clientAccount: String!
-  receiptId: String!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -692,10 +733,12 @@ type OrderConnection {
 }
 
 input OrderCreateInput {
+  tracking: String!
   total: Int!
+  totalCost: Int!
+  status: String
   clientName: String!
   clientAccount: String!
-  receiptId: String!
   items: OrderItemCreateManyInput
   user: UserCreateOneInput!
 }
@@ -716,8 +759,9 @@ type OrderItem implements Node {
   image: String!
   largeImage: String!
   price: Int!
+  cost: Int!
   quantity: Int!
-  user(where: UserWhereInput): User
+  user: User
 }
 
 """A connection to a list of items."""
@@ -736,6 +780,7 @@ input OrderItemCreateInput {
   image: String!
   largeImage: String!
   price: Int!
+  cost: Int!
   quantity: Int
   user: UserCreateOneInput
 }
@@ -767,6 +812,8 @@ enum OrderItemOrderByInput {
   largeImage_DESC
   price_ASC
   price_DESC
+  cost_ASC
+  cost_DESC
   quantity_ASC
   quantity_DESC
   updatedAt_ASC
@@ -782,6 +829,7 @@ type OrderItemPreviousValues {
   image: String!
   largeImage: String!
   price: Int!
+  cost: Int!
   quantity: Int!
 }
 
@@ -830,6 +878,7 @@ input OrderItemUpdateDataInput {
   image: String
   largeImage: String
   price: Int
+  cost: Int
   quantity: Int
   user: UserUpdateOneInput
 }
@@ -840,6 +889,7 @@ input OrderItemUpdateInput {
   image: String
   largeImage: String
   price: Int
+  cost: Int
   quantity: Int
   user: UserUpdateOneInput
 }
@@ -851,6 +901,16 @@ input OrderItemUpdateManyInput {
   delete: [OrderItemWhereUniqueInput!]
   update: [OrderItemUpdateWithWhereUniqueNestedInput!]
   upsert: [OrderItemUpsertWithWhereUniqueNestedInput!]
+}
+
+input OrderItemUpdateManyMutationInput {
+  title: String
+  description: String
+  image: String
+  largeImage: String
+  price: Int
+  cost: Int
+  quantity: Int
 }
 
 input OrderItemUpdateWithWhereUniqueNestedInput {
@@ -1095,6 +1155,28 @@ input OrderItemWhereInput {
 
   """All values greater than or equal the given value."""
   price_gte: Int
+  cost: Int
+
+  """All values that are not equal to given value."""
+  cost_not: Int
+
+  """All values that are contained in given list."""
+  cost_in: [Int!]
+
+  """All values that are not contained in given list."""
+  cost_not_in: [Int!]
+
+  """All values less than the given value."""
+  cost_lt: Int
+
+  """All values less than or equal the given value."""
+  cost_lte: Int
+
+  """All values greater than the given value."""
+  cost_gt: Int
+
+  """All values greater than or equal the given value."""
+  cost_gte: Int
   quantity: Int
 
   """All values that are not equal to given value."""
@@ -1118,9 +1200,6 @@ input OrderItemWhereInput {
   """All values greater than or equal the given value."""
   quantity_gte: Int
   user: UserWhereInput
-  _MagicalBackRelation_OrderToOrderItem_every: OrderWhereInput
-  _MagicalBackRelation_OrderToOrderItem_some: OrderWhereInput
-  _MagicalBackRelation_OrderToOrderItem_none: OrderWhereInput
 }
 
 input OrderItemWhereUniqueInput {
@@ -1130,14 +1209,18 @@ input OrderItemWhereUniqueInput {
 enum OrderOrderByInput {
   id_ASC
   id_DESC
+  tracking_ASC
+  tracking_DESC
   total_ASC
   total_DESC
+  totalCost_ASC
+  totalCost_DESC
+  status_ASC
+  status_DESC
   clientName_ASC
   clientName_DESC
   clientAccount_ASC
   clientAccount_DESC
-  receiptId_ASC
-  receiptId_DESC
   createdAt_ASC
   createdAt_DESC
   updatedAt_ASC
@@ -1146,10 +1229,12 @@ enum OrderOrderByInput {
 
 type OrderPreviousValues {
   id: ID!
+  tracking: String!
   total: Int!
+  totalCost: Int!
+  status: String!
   clientName: String!
   clientAccount: String!
-  receiptId: String!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -1194,12 +1279,23 @@ input OrderSubscriptionWhereInput {
 }
 
 input OrderUpdateInput {
+  tracking: String
   total: Int
+  totalCost: Int
+  status: String
   clientName: String
   clientAccount: String
-  receiptId: String
   items: OrderItemUpdateManyInput
-  user: UserUpdateOneInput
+  user: UserUpdateOneRequiredInput
+}
+
+input OrderUpdateManyMutationInput {
+  tracking: String
+  total: Int
+  totalCost: Int
+  status: String
+  clientName: String
+  clientAccount: String
 }
 
 input OrderWhereInput {
@@ -1251,6 +1347,46 @@ input OrderWhereInput {
 
   """All values not ending with the given string."""
   id_not_ends_with: ID
+  tracking: String
+
+  """All values that are not equal to given value."""
+  tracking_not: String
+
+  """All values that are contained in given list."""
+  tracking_in: [String!]
+
+  """All values that are not contained in given list."""
+  tracking_not_in: [String!]
+
+  """All values less than the given value."""
+  tracking_lt: String
+
+  """All values less than or equal the given value."""
+  tracking_lte: String
+
+  """All values greater than the given value."""
+  tracking_gt: String
+
+  """All values greater than or equal the given value."""
+  tracking_gte: String
+
+  """All values containing the given string."""
+  tracking_contains: String
+
+  """All values not containing the given string."""
+  tracking_not_contains: String
+
+  """All values starting with the given string."""
+  tracking_starts_with: String
+
+  """All values not starting with the given string."""
+  tracking_not_starts_with: String
+
+  """All values ending with the given string."""
+  tracking_ends_with: String
+
+  """All values not ending with the given string."""
+  tracking_not_ends_with: String
   total: Int
 
   """All values that are not equal to given value."""
@@ -1273,6 +1409,68 @@ input OrderWhereInput {
 
   """All values greater than or equal the given value."""
   total_gte: Int
+  totalCost: Int
+
+  """All values that are not equal to given value."""
+  totalCost_not: Int
+
+  """All values that are contained in given list."""
+  totalCost_in: [Int!]
+
+  """All values that are not contained in given list."""
+  totalCost_not_in: [Int!]
+
+  """All values less than the given value."""
+  totalCost_lt: Int
+
+  """All values less than or equal the given value."""
+  totalCost_lte: Int
+
+  """All values greater than the given value."""
+  totalCost_gt: Int
+
+  """All values greater than or equal the given value."""
+  totalCost_gte: Int
+  status: String
+
+  """All values that are not equal to given value."""
+  status_not: String
+
+  """All values that are contained in given list."""
+  status_in: [String!]
+
+  """All values that are not contained in given list."""
+  status_not_in: [String!]
+
+  """All values less than the given value."""
+  status_lt: String
+
+  """All values less than or equal the given value."""
+  status_lte: String
+
+  """All values greater than the given value."""
+  status_gt: String
+
+  """All values greater than or equal the given value."""
+  status_gte: String
+
+  """All values containing the given string."""
+  status_contains: String
+
+  """All values not containing the given string."""
+  status_not_contains: String
+
+  """All values starting with the given string."""
+  status_starts_with: String
+
+  """All values not starting with the given string."""
+  status_not_starts_with: String
+
+  """All values ending with the given string."""
+  status_ends_with: String
+
+  """All values not ending with the given string."""
+  status_not_ends_with: String
   clientName: String
 
   """All values that are not equal to given value."""
@@ -1353,46 +1551,6 @@ input OrderWhereInput {
 
   """All values not ending with the given string."""
   clientAccount_not_ends_with: String
-  receiptId: String
-
-  """All values that are not equal to given value."""
-  receiptId_not: String
-
-  """All values that are contained in given list."""
-  receiptId_in: [String!]
-
-  """All values that are not contained in given list."""
-  receiptId_not_in: [String!]
-
-  """All values less than the given value."""
-  receiptId_lt: String
-
-  """All values less than or equal the given value."""
-  receiptId_lte: String
-
-  """All values greater than the given value."""
-  receiptId_gt: String
-
-  """All values greater than or equal the given value."""
-  receiptId_gte: String
-
-  """All values containing the given string."""
-  receiptId_contains: String
-
-  """All values not containing the given string."""
-  receiptId_not_contains: String
-
-  """All values starting with the given string."""
-  receiptId_starts_with: String
-
-  """All values not starting with the given string."""
-  receiptId_not_starts_with: String
-
-  """All values ending with the given string."""
-  receiptId_ends_with: String
-
-  """All values not ending with the given string."""
-  receiptId_not_ends_with: String
   createdAt: DateTime
 
   """All values that are not equal to given value."""
@@ -1445,6 +1603,7 @@ input OrderWhereInput {
 
 input OrderWhereUniqueInput {
   id: ID
+  tracking: String
 }
 
 """Information about pagination in a connection."""
@@ -1469,6 +1628,7 @@ enum Permission {
   ITEMUPDATE
   ITEMDELETE
   PERMISSIONUPDATE
+  ORDERUPDATE
 }
 
 type Query {
@@ -1511,6 +1671,7 @@ type User implements Node {
   resetToken: String
   resetTokenExpiry: Float
   permissions: [Permission!]!
+  confirmed: Boolean!
   cart(where: CartItemWhereInput, orderBy: CartItemOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CartItem!]
 }
 
@@ -1530,6 +1691,7 @@ input UserCreateInput {
   password: String!
   resetToken: String
   resetTokenExpiry: Float
+  confirmed: Boolean
   permissions: UserCreatepermissionsInput
   cart: CartItemCreateManyWithoutUserInput
 }
@@ -1554,6 +1716,7 @@ input UserCreateWithoutCartInput {
   password: String!
   resetToken: String
   resetTokenExpiry: Float
+  confirmed: Boolean
   permissions: UserCreatepermissionsInput
 }
 
@@ -1579,6 +1742,8 @@ enum UserOrderByInput {
   resetToken_DESC
   resetTokenExpiry_ASC
   resetTokenExpiry_DESC
+  confirmed_ASC
+  confirmed_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
@@ -1593,6 +1758,7 @@ type UserPreviousValues {
   resetToken: String
   resetTokenExpiry: Float
   permissions: [Permission!]!
+  confirmed: Boolean!
 }
 
 type UserSubscriptionPayload {
@@ -1640,6 +1806,7 @@ input UserUpdateDataInput {
   password: String
   resetToken: String
   resetTokenExpiry: Float
+  confirmed: Boolean
   permissions: UserUpdatepermissionsInput
   cart: CartItemUpdateManyWithoutUserInput
 }
@@ -1650,22 +1817,40 @@ input UserUpdateInput {
   password: String
   resetToken: String
   resetTokenExpiry: Float
+  confirmed: Boolean
   permissions: UserUpdatepermissionsInput
   cart: CartItemUpdateManyWithoutUserInput
+}
+
+input UserUpdateManyMutationInput {
+  name: String
+  email: String
+  password: String
+  resetToken: String
+  resetTokenExpiry: Float
+  confirmed: Boolean
+  permissions: UserUpdatepermissionsInput
 }
 
 input UserUpdateOneInput {
   create: UserCreateInput
   connect: UserWhereUniqueInput
+  disconnect: Boolean
   delete: Boolean
   update: UserUpdateDataInput
   upsert: UserUpsertNestedInput
 }
 
-input UserUpdateOneWithoutCartInput {
+input UserUpdateOneRequiredInput {
+  create: UserCreateInput
+  connect: UserWhereUniqueInput
+  update: UserUpdateDataInput
+  upsert: UserUpsertNestedInput
+}
+
+input UserUpdateOneRequiredWithoutCartInput {
   create: UserCreateWithoutCartInput
   connect: UserWhereUniqueInput
-  delete: Boolean
   update: UserUpdateWithoutCartDataInput
   upsert: UserUpsertWithoutCartInput
 }
@@ -1680,6 +1865,7 @@ input UserUpdateWithoutCartDataInput {
   password: String
   resetToken: String
   resetTokenExpiry: Float
+  confirmed: Boolean
   permissions: UserUpdatepermissionsInput
 }
 
@@ -1924,18 +2110,13 @@ input UserWhereInput {
 
   """All values greater than or equal the given value."""
   resetTokenExpiry_gte: Float
+  confirmed: Boolean
+
+  """All values that are not equal to given value."""
+  confirmed_not: Boolean
   cart_every: CartItemWhereInput
   cart_some: CartItemWhereInput
   cart_none: CartItemWhereInput
-  _MagicalBackRelation_OrderItemToUser_every: OrderItemWhereInput
-  _MagicalBackRelation_OrderItemToUser_some: OrderItemWhereInput
-  _MagicalBackRelation_OrderItemToUser_none: OrderItemWhereInput
-  _MagicalBackRelation_ItemToUser_every: ItemWhereInput
-  _MagicalBackRelation_ItemToUser_some: ItemWhereInput
-  _MagicalBackRelation_ItemToUser_none: ItemWhereInput
-  _MagicalBackRelation_OrderToUser_every: OrderWhereInput
-  _MagicalBackRelation_OrderToUser_some: OrderWhereInput
-  _MagicalBackRelation_OrderToUser_none: OrderWhereInput
 }
 
 input UserWhereUniqueInput {

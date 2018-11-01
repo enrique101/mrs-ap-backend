@@ -7,6 +7,7 @@ enum Permission {
   ITEMUPDATE
   ITEMDELETE
   PERMISSIONUPDATE
+  ORDERUPDATE
 }
 
 type User {
@@ -17,6 +18,7 @@ type User {
   resetToken: String
   resetTokenExpiry: Float
   permissions: [Permission]
+  confirmed: Boolean! @default(value: false)
   cart: [CartItem!]!
 }
 
@@ -27,12 +29,13 @@ type Item {
   image: String!
   largeImage: String!
   price: Int!
+  cost:Int!
   user: User!
 }
 
 type CartItem {
   id: ID! @unique
-  quantity : Int! @default(value: 1)
+  quantity: Int! @default(value: 1)
   item: Item
   user: User!
 }
@@ -44,18 +47,21 @@ type OrderItem {
   image: String!
   largeImage: String!
   price: Int!
+  cost:Int!
   quantity: Int! @default(value: 1)
   user: User
 }
 
 type Order {
   id: ID! @unique
+  tracking: String! @unique
   items: [OrderItem!]!
   total: Int!
+  totalCost: Int!
   user: User!
-  clientName: String!
+  status: String! @default(value: "Generada")
+  clientName: String! 
   clientAccount: String!
-  receiptId: String!
   createdAt: DateTime!
   updatedAt: DateTime!
 }

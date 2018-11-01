@@ -11,7 +11,7 @@ const transport = nodemailer.createTransport({
     },
 });
 
-const makeANiceEmail = text => `
+const makeANiceEmail = (name,text) => `
   <div className="email" style="
     border: 1px solid black;
     padding: 20px;
@@ -19,12 +19,12 @@ const makeANiceEmail = text => `
     line-height: 2;
     font-size: 20px;
   ">
-    <h2>Hello There!</h2>
+    <h2>Hola ${name}</h2>
     <p>${text}</p>
   </div>
 `;
 
-const orderEmail = ({ id, receiptId, clientAccount, clientName, createdAt, total }, orderItems, {name,email}) => {
+const orderEmail = ({ tracking, clientAccount, clientName, createdAt, totalCost }, orderItems, {name,email}) => {
   const localLocale = moment(createdAt);
   moment.locale('es');
   localLocale.locale(false);
@@ -45,12 +45,8 @@ const orderEmail = ({ id, receiptId, clientAccount, clientName, createdAt, total
                           </td>
                       </tr>
                       <tr><td valign="top" align="left">
-                        <b>Aeropost Numero de Referencia:</b>
-                        ${receiptId}
-                      </td></tr>
-                      <tr><td valign="top" align="left">
-                        <b>Dell Numero de Referencia:</b>
-                        ${id}
+                        <b>Dell Numero de Orden:</b>
+                        ${tracking}
                       </td></tr>
                       <tr><td valign="top" align="left">
                         <b>Hecha por:</b> ${ name } - ${ email }
@@ -59,7 +55,7 @@ const orderEmail = ({ id, receiptId, clientAccount, clientName, createdAt, total
                         <b>Para el cliente:</b> ${ clientName } - ${ clientAccount }
                       </td></tr>
                       <tr><td valign="top" align="left">
-                        <b>Total:</b> ${formatMoney(total)}
+                        <b>Total:</b> ${formatMoney(totalCost)}
                       </td></tr>
                   </tbody>
               </table>
@@ -123,13 +119,13 @@ const orderEmail = ({ id, receiptId, clientAccount, clientName, createdAt, total
   `;
 }
 
-const orderRow = ({quantity,title,price}) => {
+const orderRow = ({quantity,title,cost}) => {
   return `<tr>
             <td colspan="1" valign="top">
               ${quantity} X <i>${title}</i><br>
             </td>
             <td align="right" valign="top" colspan="2">
-              ${formatMoney(price)}<br>
+              ${formatMoney(cost)}<br>
             </td>
         </tr>`;
 };

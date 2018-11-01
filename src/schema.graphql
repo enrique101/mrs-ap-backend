@@ -7,19 +7,20 @@ type SuccessMessage{
 }
 
 type Mutation{
-    createItem(title: String, description: String, image: String, largeImage: String, price: Int) : Item!
-    updateItem(id:ID!, title: String, description: String, price: Int) : Item!
+    createItem(title: String, description: String, image: String, largeImage: String, price: Int, cost: Int) : Item!
+    updateItem(id:ID!, title: String, description: String, price: Int, cost: Int) : Item!
     deleteItem(id:ID!) : Item
     signup(email: String!, password: String!, name: String!): User!
     signin(email:String!, password: String!): User!
     signout: SuccessMessage
+    confirmUser(id:ID!) : SuccessMessage
     requestReset(email: String!): SuccessMessage
     resetPassword(resetToken: String!, password: String!, confirmPassword: String!): User!
     updatePermissions(permissions: [Permission], userId: ID!) : User!
     addToCart(id: ID!) : CartItem
     removeFromCart(id: ID!) : CartItem
-    createOrder(token: String!): Order!
-    createOrderRequest(name: String!, account: String!, receipt: String!): Order!
+    createOrderRequest(name: String!, account: String!): Order!
+    updateOrderStatus(id:ID!, status: String!) : SuccessMessage
 }
 
 # Implementation of Query are in Query.js
@@ -30,7 +31,8 @@ type Query{
     me: User
     users: [User]!
     order(id:ID!): Order
-    orders(orderBy: OrderOrderByInput): [Order]!
+    orders(where:OrderWhereInput, orderBy: OrderOrderByInput): [Order]!
+    searchOrders(searchTerm: String!): [Order]!
 }
 
 type User {
@@ -38,5 +40,6 @@ type User {
   name: String!
   email: String!
   permissions: [Permission!]!
+  confirmed: Boolean!
   cart: [CartItem!]!
 }

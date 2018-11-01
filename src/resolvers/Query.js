@@ -49,6 +49,21 @@ const Query = {
           info
         );
       },
+      async searchOrders(parent, args, ctx, info) {
+        const { userId } = ctx.request;
+        if (!userId) {
+          throw new Error('you must be signed in!');
+        }
+         return await ctx.db.query.orders({where:
+          {
+            AND: [
+                { tracking_contains: args.searchTerm },
+                { user: { id: userId } }
+              ]
+          },
+          info
+        });
+      },
 };
 
 module.exports = Query;
