@@ -331,7 +331,7 @@ const Mutations = {
         await transport.sendMail({
           from: 'enrique.acuna@gmail.com',
           to: user.email,
-          subject: `Nuevo Pedido ${order.id}`,
+          subject: `Nuevo Pedido ${order.tracking}`,
           html: orderEmail(order, orderItems,user),
       });
 
