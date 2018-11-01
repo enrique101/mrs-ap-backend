@@ -25,7 +25,7 @@ server.express.use((req, res, next) => {
       { where: { id: req.userId } },
       '{ id, permissions, email, name, confirmed }'
     );
-    if (!user.confirmed){
+    if (user && !user.confirmed){
       delete req.userId
       return next();
     }
