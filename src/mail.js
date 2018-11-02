@@ -45,7 +45,7 @@ const orderEmail = ({ tracking, clientAccount, clientName, createdAt, totalCost 
                           </td>
                       </tr>
                       <tr><td valign="top" align="left">
-                        <b>Dell Numero de Orden:</b>
+                        <b>Numero de Tracking:</b>
                         ${tracking}
                       </td></tr>
                       <tr><td valign="top" align="left">

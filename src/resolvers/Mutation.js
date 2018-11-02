@@ -5,7 +5,7 @@ const { randomBytes } = require('crypto');
 const { promisify } = require('util');
 const { transport, makeANiceEmail, orderEmail } = require('../mail');
 const { hasPermission, AppPermissions } = require('../utils');
-const stripe = require('../stripe');
+
 
 const generateJWT = (userId, res) => {
     const token = jwt.sign({ userId }, process.env.APP_SECRET);
@@ -78,7 +78,9 @@ const Mutations = {
         args.email = args.email.toLowerCase();
         const where = {email:args.email},
               exist = await ctx.db.query.users({ where }, `{email}`);
+              emailRegex = new RegExp('[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$');
         if(exist.length > 0) throw new Error(`Email already registered`);
+        if(!emailRegex.test(args.email)) throw new Error(`Invalid format`);
         const password = await bcrypt.hash(args.password, 10);
         const user = await ctx.db.mutation.createUser({
             data:{
@@ -93,11 +95,6 @@ const Mutations = {
             subject: 'Confirma tu dirección de correo',
             html: makeANiceEmail(user.name,`<a href="${process.env.FRONTEND_URL}/confirm?id=${user.id}">Presiona aquí para confirmar tu correo.</a>`),
         });
-        // const token = jwt.sign({ userId : user.id}, process.env.APP_SECRET);
-        // ctx.response.cookie('token', token, {
-        //     httpOnly: true,
-        //     maxAge: 1000 * 60 * 60 * 24 * 365,
-        // });
         return user;
     },
     async signin(parent, { email, password }, ctx, info){
@@ -266,7 +263,6 @@ const Mutations = {
       async updateOrderStatus(parent, args, ctx, info) {
         const { userId } = ctx.request;
         const { id, status } = args;
-        console.log(args);
         if (!userId) throw new Error('You must be signed in.');
         return ctx.db.mutation.updateOrder(
           {

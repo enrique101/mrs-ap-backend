@@ -14,6 +14,13 @@ function hasPermission(user, permissionsNeeded) {
   }
 }
 
+const checkPermissions = (userPermissions, permissions)=>{
+  if(!permissions){
+      return false;
+  }
+  return userPermissions.some(permission => permissions.includes(permission));
+}
+
 function formatMoney(amount) {
   const options = {
     style: 'currency',
@@ -33,9 +40,11 @@ const AppPermissions = {
   itemUpdate:'ITEMUPDATE',
   itemDelete:'ITEMDELETE',
   permissionUpdate:'PERMISSIONUPDATE',
+  orderUpdate:'ORDERUPDATE',
 }
 Object.freeze(AppPermissions);
 
 exports.hasPermission = hasPermission;
+exports.checkPermissions = checkPermissions;
 exports.AppPermissions = AppPermissions;
 exports.formatMoney = formatMoney;

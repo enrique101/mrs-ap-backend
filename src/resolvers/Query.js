@@ -1,6 +1,6 @@
 // Custom resolver for queries
 const {forwardTo} = require('prisma-binding');
-const { hasPermission } = require('../utils');
+const { checkPermissions, hasPermission, AppPermissions } = require('../utils');
 
 const Query = {
     items: forwardTo('db'),
@@ -18,7 +18,7 @@ const Query = {
         if(!ctx.request.userId){
             throw new Error('You need to login!');
         }
-        hasPermission(ctx.request.user,['ADMIN', 'PERMISSIONUPDATE']);
+        hasPermission(ctx.request.user,[AppPermissions.admin, AppPermissions.permissionUpdate]);
 
         return ctx.db.query.users({}, info);
     },
@@ -28,7 +28,7 @@ const Query = {
         }
         const order = await ctx.db.query.order({ where: {id: args.id} }, info);
         const ownsOrder = order.user.id === ctx.request.userId;
-        const isAdmin = ctx.request.user.permissions.includes('ADMIN');
+        const isAdmin = checkPermissions(ctx.request.user.permissions,[AppPermissions.admin,AppPermissions.orderUpdate]);
         if(!ownsOrder && !isAdmin){
             throw new Error('You don\'t have permission');
         }
@@ -39,6 +39,12 @@ const Query = {
         const { userId } = ctx.request;
         if (!userId) {
           throw new Error('you must be signed in!');
+        }
+        if (checkPermissions(ctx.request.user.permissions,[AppPermissions.admin, AppPermissions.orderUpdate])){
+            return ctx.db.query.orders(
+                {},
+                info
+              );
         }
         return ctx.db.query.orders(
           {
@@ -54,6 +60,15 @@ const Query = {
         if (!userId) {
           throw new Error('you must be signed in!');
         }
+        if (checkPermissions(ctx.request.user.permissions,[AppPermissions.admin, AppPermissions.orderUpdate])){
+            return await ctx.db.query.orders({where:
+                {
+                    tracking_contains: args.searchTerm,
+                },
+                info
+                });
+        }
+
          return await ctx.db.query.orders({where:
           {
             AND: [
