@@ -5,7 +5,6 @@
 type SuccessMessage{
     message: String
 }
-
 type Mutation{
     createItem(title: String, description: String, image: String, largeImage: String, price: Int, cost: Int) : Item!
     updateItem(id:ID!, title: String, description: String, price: Int, cost: Int) : Item!
@@ -32,6 +31,7 @@ type Query{
     users: [User]!
     order(id:ID!): Order
     orders(where:OrderWhereInput, orderBy: OrderOrderByInput): [Order]!
+    ordersByUser(where:OrderWhereInput, orderBy: OrderOrderByInput): [Order]!
     searchOrders(searchTerm: String!): [Order]!
 }
 

@@ -4,6 +4,7 @@ const { checkPermissions, hasPermission, AppPermissions } = require('../utils');
 
 const Query = {
     items: forwardTo('db'),
+    orders: forwardTo('db'),
     item: forwardTo('db'),
     itemsConnection: forwardTo('db'),
     me(parent, args, ctx, info){
@@ -35,7 +36,7 @@ const Query = {
 
         return order;
     },
-    async orders(parent, args, ctx, info) {
+    async ordersByUser(parent, args, ctx, info) {
         const { userId } = ctx.request;
         if (!userId) {
           throw new Error('you must be signed in!');
