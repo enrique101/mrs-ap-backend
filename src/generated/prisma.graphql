@@ -1,5 +1,5 @@
 # source: https://eu1.prisma.sh/enrique/demo/dev
-# timestamp: Thu Nov 01 2018 16:10:52 GMT-0600 (Central Standard Time)
+# timestamp: Sat Nov 03 2018 10:18:55 GMT-0600 (Central Standard Time)
 
 type AggregateCartItem {
   count: Int!
@@ -1629,6 +1629,7 @@ enum Permission {
   ITEMDELETE
   PERMISSIONUPDATE
   ORDERUPDATE
+  REPORT
 }
 
 type Query {
